@@ -16,4 +16,12 @@ export const EVENTS = {
   START_GAME: "start-game",
 
   GAME_STATE: "game-state",
+
+  SEND_CHAT: "send-chat",
+
+  CHAT_MESSAGE: "chat-message",
+
+  ROUND_STARTED: "round-started",
+
+  ROUND_ENDED: "round-ended",
 };

@@ -22,3 +22,9 @@ interface GameState {
   maxRounds: number;
   timeLeft: number;
 }
+
+export interface ChatMessage {
+  username: string;
+  text: string;
+  timestamp: number;
+}

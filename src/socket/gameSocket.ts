@@ -4,6 +4,8 @@ import { roomManager } from "../game/roomManager";
 import { generateRoomId } from "../game/generateRoomId";
 import { Room } from "../game/types";
 import { startGame } from "../game/startGame";
+import { startRound } from "../game/startRound";
+import { startTimer } from "../game/timers";
 
 export const registerGameSocket = (io: Server, socket: Socket) => {
   console.log("Connected:", socket.id);
@@ -20,6 +22,10 @@ export const registerGameSocket = (io: Server, socket: Socket) => {
     }
 
     startGame(room);
+
+    startRound(room);
+
+    startTimer(io, room);
 
     io.to(roomId).emit(EVENTS.ROOM_STATE, room);
   });
@@ -102,6 +108,36 @@ export const registerGameSocket = (io: Server, socket: Socket) => {
 
   socket.on(EVENTS.GET_PUBLIC_ROOMS, () => {
     socket.emit(EVENTS.PUBLIC_ROOMS, roomManager.getPublicRooms());
+  });
+
+  socket.on(EVENTS.SEND_CHAT, ({ roomId, text }) => {
+    const room = roomManager.getRoom(roomId);
+
+    if (!room) return;
+
+    const player = room.players.find((p) => p.socketId === socket.id);
+
+    if (!player) return;
+
+    io.to(roomId).emit(EVENTS.CHAT_MESSAGE, {
+      username: player.username,
+
+      text,
+    });
+
+    const answer = room.gameState.currentWord.toLowerCase();
+
+    if (text.toLowerCase() === answer) {
+      player.score += 100;
+
+      io.to(roomId).emit(EVENTS.CHAT_MESSAGE, {
+        username: "SYSTEM",
+
+        text: `${player.username} guessed correctly!`,
+      });
+
+      io.to(roomId).emit(EVENTS.ROOM_STATE, room);
+    }
   });
 
   socket.on("disconnect", () => {
