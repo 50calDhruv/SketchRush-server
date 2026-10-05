@@ -1,45 +1,22 @@
-import express from "express";
-import cors from "cors";
-import { createServer } from "http";
-import { Server } from "socket.io";
+import { config } from "./config.js";
+import { createGameServer } from "./server.js";
 
-import { registerGameSocket } from "./socket/gameSocket";
-import { roomManager } from "./game/roomManager";
+const { httpServer, close } = createGameServer({ corsOrigins: config.corsOrigins });
 
-const app = express();
-
-app.use(cors());
-
-const httpServer = createServer(app);
-
-const io = new Server(httpServer, {
-  cors: {
-    origin: "*",
-  },
+httpServer.listen(config.port, () => {
+  console.log(`SketchRush server listening on http://localhost:${config.port}`);
 });
 
-io.on("connection", (socket) => {
-  registerGameSocket(io, socket);
-});
-
-app.get("/", (_, res) => {
-  res.send("SketchRush Server Running");
-});
-
-app.get(
-  "/rooms",
-  (_, res) => {
-
-    res.json(
-      roomManager.getPublicRooms()
-    );
-  }
-);
-
-const PORT = 5000;
-
-httpServer.listen(PORT, () => {
-  console.log(
-    `Server running on port ${PORT}`
+const shutdown = (signal: string) => {
+  console.log(`${signal} received, shutting down`);
+  close().then(
+    () => process.exit(0),
+    (error: unknown) => {
+      console.error("Shutdown failed", error);
+      process.exit(1);
+    },
   );
-});
+};
+
+process.once("SIGINT", () => shutdown("SIGINT"));
+process.once("SIGTERM", () => shutdown("SIGTERM"));

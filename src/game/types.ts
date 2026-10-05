@@ -1,30 +1,11 @@
-export interface Player {
-  socketId: string;
-  username: string;
-  score: number;
-}
+import type { Server, Socket } from "socket.io";
 
-export interface Room {
-  id: string;
-  name: string;
-  isPublic: boolean;
-  ownerId: string;
-  maxPlayers: number;
-  players: Player[];
-  gameState: GameState;
-}
+import type { ClientToServerEvents, ServerToClientEvents } from "../shared/protocol.js";
 
-interface GameState {
-  status: "waiting" | "playing";
-  currentDrawerIndex: number;
-  currentWord: string;
-  round: number;
-  maxRounds: number;
-  timeLeft: number;
-}
+export type SocketData = {
+  /** Private per-tab secret from the handshake; never sent to other clients. */
+  sessionId: string;
+};
 
-export interface ChatMessage {
-  username: string;
-  text: string;
-  timestamp: number;
-}
+export type GameServer = Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
+export type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
